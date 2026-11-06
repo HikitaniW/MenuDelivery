@@ -1,0 +1,413 @@
+
+<div class="app-container">
+
+  <header class="header">
+    <div class="header-content">
+      <a class="logo" href="/">🍽️ MenuDelivery</a>
+
+      <nav class="header-actions">
+        @if (currentEmail()) {
+          <span class="user-email">{{ currentEmail() }}</span>
+          <button class="btn btn-outline" (click)="logout()">Выйти</button>
+        } @else {
+          <button class="btn btn-outline" (click)="openAuth('login')">
+            Войти
+          </button>
+          <button class="btn btn-primary" (click)="openAuth('register')">
+            Регистрация
+          </button>
+        }
+      </nav>
+    </div>
+  </header>
+
+  <main>
+       <section class="hero">
+      <div class="hero-content">
+        <h1>Вкусная еда с доставкой</h1>
+        <p>Выбирайте любимые блюда и заказывайте с удовольствием!</p>
+        <a href="#menu" class="btn btn-primary">Посмотреть меню</a>
+      </div>
+
+      <div class="hero-image">
+        <span>🍕</span>
+      </div>
+    </section>
+
+    <section class="menu-section" id="menu">
+      <div class="section-heading">
+        <h2>Наше меню</h2>
+        <p>Выберите блюдо по своему вкусу</p>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label for="categoryFilter">Категория</label>
+          <select
+            id="categoryFilter"
+            [(ngModel)]="selectedCategory"
+            (change)="loadDishes()">
+            <option value="">Все категории</option>
+            <option value="1">Пицца</option>
+            <option value="2">Бургеры</option>
+            <option value="3">Напитки</option>
+            <option value="4">Десерты</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="availabilityFilter">Наличие</label>
+          <select
+            id="availabilityFilter"
+            [(ngModel)]="selectedAvailability"
+            (change)="loadDishes()">
+            <option value="">Все блюда</option>
+            <option value="true">В наличии</option>
+            <option value="false">Нет в наличии</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="maxPrice">Максимальная цена</label>
+          <input
+            id="maxPrice"
+            type="number"
+            min="0"
+            placeholder="Например, 50000"
+            [(ngModel)]="maxPrice"
+            (change)="loadDishes()">
+        </div>
+
+        <div class="filter-group">
+          <label for="sortFilter">Сортировка</label>
+          <select
+            id="sortFilter"
+            [(ngModel)]="selectedSort"
+            (change)="loadDishes()">
+            <option value="">Без сортировки</option>
+            <option value="price">По цене</option>
+            <option value="calories">По калориям</option>
+          </select>
+        </div>
+
+        <button class="btn btn-outline" (click)="resetFilters()">
+          Сбросить
+        </button>
+      </div>
+
+      @if (loading()) {
+        <div class="status-message">
+          <p>Загружаем меню...</p>
+        </div>
+      }
+
+      @if (error()) {
+        <div class="error-message">
+          {{ error() }}
+          <button class="btn btn-outline" (click)="loadDishes()">
+            Повторить
+          </button>
+        </div>
+      }
+
+      @if (!loading() && !error() && dishes().length === 0) {
+        <div class="status-message">
+          <p>Блюда не найдены.</p>
+        </div>
+      }
+
+      <div class="dishes-grid">
+        @for (dish of dishes(); track dish.id) {
+          <article class="dish-card">
+
+            @if (dish.imageFileName) {
+              <img
+                class="dish-image"
+                [src]="'http://localhost:5242/uploads/' + dish.imageFileName"
+                [alt]="dish.name">
+            } @else {
+              <div class="dish-placeholder">
+                {{ getDishEmoji(dish) }}
+              </div>
+            }
+
+            <div class="dish-content">
+
+              @if (editingDishId() === dish.id) {
+                <div class="edit-form">
+                  <h3>Редактирование блюда</h3>
+
+                  <label>Название</label>
+                  <input type="text" [(ngModel)]="editDishName">
+
+                  <label>Цена (сум)</label>
+                  <input type="number" min="1" [(ngModel)]="editDishPrice">
+
+                  <label>Вес (г)</label>
+                  <input type="number" min="1" [(ngModel)]="editDishWeight">
+
+                  <label>Калории</label>
+                  <input type="number" min="0" [(ngModel)]="editDishCalories">
+
+                  <label>Категория</label>
+                  <select [(ngModel)]="editDishCategory">
+                    <option value="1">Пицца</option>
+                    <option value="2">Бургеры</option>
+                    <option value="3">Напитки</option>
+                    <option value="4">Десерты</option>
+                  </select>
+
+                  <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="editDishAvailable">
+                    В наличии
+                  </label>
+
+                  <label>Новое фото</label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    (change)="onEditImageSelected($event)">
+
+                  @if (editDishImage) {
+                    <p>Выбрано новое фото: {{ editDishImage.name }}</p>
+                  }
+
+                  @if (editDishMessage) {
+                    <p class="error-message">{{ editDishMessage }}</p>
+                  }
+
+                  <div class="card-actions">
+                    <button
+                      class="btn btn-primary"
+                      [disabled]="editDishBusy()"
+                      (click)="submitEdit(dish)">
+                      {{ editDishBusy() ? 'Сохранение...' : 'Сохранить' }}
+                    </button>
+
+                    <button
+                      class="btn btn-outline"
+                      (click)="cancelEdit()">
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <h3 class="dish-name">{{ dish.name }}</h3>
+
+                <div class="dish-details">
+                  <span>⚖️ {{ dish.weightGrams }} г</span>
+                  <span>🔥 {{ dish.calories }} ккал</span>
+                </div>
+
+                <div class="dish-price">
+                  {{ formatPrice(dish.price) }}
+                </div>
+
+                <div class="dish-availability">
+                  @if (dish.isAvailable) {
+                    <span class="available">В наличии</span>
+                  } @else {
+                    <span class="unavailable">Нет в наличии</span>
+                  }
+                </div>
+
+                @if (isDishOwner(dish)) {
+                  <div class="card-actions">
+                    <button
+                      class="btn btn-outline"
+                      (click)="startEdit(dish)">
+                      Изменить
+                    </button>
+
+                    <button
+                      class="btn btn-danger"
+                      (click)="deleteDish(dish)">
+                      Удалить
+                    </button>
+                  </div>
+                }
+              }
+
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+
+    @if (currentEmail()) {
+      <section class="add-dish-section">
+        <div class="section-heading">
+          <h2>Добавить своё блюдо</h2>
+          <p>Поделитесь своим блюдом с другими пользователями</p>
+        </div>
+
+        <form class="add-dish-form" (submit)="$event.preventDefault(); submitNewDish()">
+
+          <div class="form-group">
+            <label for="newDishName">Название блюда</label>
+            <input
+              id="newDishName"
+              type="text"
+              placeholder="Название блюда"
+              [(ngModel)]="newDishName"
+              name="newDishName"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="newDishPrice">Цена (сум)</label>
+            <input
+              id="newDishPrice"
+              type="number"
+              min="1"
+              [(ngModel)]="newDishPrice"
+              name="newDishPrice"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="newDishWeight">Вес (г)</label>
+            <input
+              id="newDishWeight"
+              type="number"
+              min="1"
+              [(ngModel)]="newDishWeight"
+              name="newDishWeight"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="newDishCalories">Калории</label>
+            <input
+              id="newDishCalories"
+              type="number"
+              min="0"
+              [(ngModel)]="newDishCalories"
+              name="newDishCalories"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="newDishCategory">Категория</label>
+            <select
+              id="newDishCategory"
+              [(ngModel)]="newDishCategory"
+              name="newDishCategory">
+              <option value="1">Пицца</option>
+              <option value="2">Бургеры</option>
+              <option value="3">Напитки</option>
+              <option value="4">Десерты</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="newDishImage">Фотография блюда</label>
+            <input
+              id="newDishImage"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              (change)="onImageSelected($event)">
+            @if (selectedImage) {
+              <p>Выбрано: {{ selectedImage.name }}</p>
+            }
+          </div>
+
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="newDishAvailable"
+              name="newDishAvailable">
+            Блюдо доступно для заказа
+          </label>
+
+          @if (addDishMessage()) {
+            <p [class.success-message]="addDishMessageType() === 'success'"
+               [class.error-message]="addDishMessageType() === 'error'">
+              {{ addDishMessage() }}
+            </p>
+          }
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="addDishBusy()">
+            {{ addDishBusy() ? 'Добавление...' : 'Добавить блюдо' }}
+          </button>
+        </form>
+      </section>
+    }
+  </main>
+
+  <footer class="footer">
+    <p>© 2026 MenuDelivery. Вкусная еда с доставкой.</p>
+  </footer>
+
+  @if (showAuthForm()) {
+    <div class="modal-overlay" (click)="closeAuth()">
+      <div class="auth-modal" (click)="$event.stopPropagation()">
+
+        <button class="modal-close" (click)="closeAuth()">✕</button>
+
+        <h2>
+          {{ authMode() === 'login' ? 'Вход в аккаунт' : 'Регистрация' }}
+        </h2>
+
+        <form (submit)="$event.preventDefault(); submitAuth()">
+
+          <div class="form-group">
+            <label for="authEmail">Email</label>
+            <input
+              id="authEmail"
+              type="email"
+              [(ngModel)]="authEmail"
+              name="authEmail"
+              placeholder="Введите email"
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="authPassword">Пароль</label>
+            <input
+              id="authPassword"
+              type="password"
+              [(ngModel)]="authPassword"
+              name="authPassword"
+              placeholder="Введите пароль"
+              required>
+          </div>
+
+          @if (authMessage) {
+            <p class="error-message">{{ authMessage }}</p>
+          }
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="authBusy()">
+            @if (authBusy()) {
+              Подождите...
+            } @else {
+              {{ authMode() === 'login' ? 'Войти' : 'Зарегистрироваться' }}
+            }
+          </button>
+        </form>
+
+        <div class="auth-switch">
+          @if (authMode() === 'login') {
+            <p>Нет аккаунта?</p>
+            <button class="text-button" (click)="openAuth('register')">
+              Зарегистрироваться
+            </button>
+          } @else {
+            <p>Уже есть аккаунт?</p>
+            <button class="text-button" (click)="openAuth('login')">
+              Войти
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

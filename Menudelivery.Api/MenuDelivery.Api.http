@@ -1,0 +1,121 @@
+
+@baseUrl = http://localhost:5242
+@token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzkzODcxMTkyLCJpc3MiOiJNZW51RGVsaXZlcnkuQXBpIn0.zhWpqLdXNe656PaZyFH34NtpEj3tUmO05nu0j88yjLw"
+@dishId = 8
+@categoryId = 1
+
+### Главная страница API
+GET {{baseUrl}}/
+
+### Регистрация
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "httpuser@example.com",
+  "password": "HttpUser123!"
+}
+
+### Вход — получить JWT-токен
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test12345!"
+}
+
+### Получить список блюд
+GET {{baseUrl}}/api/dishes
+
+### Получить блюдо по ID
+GET {{baseUrl}}/api/dishes/{{dishId}}
+
+### Создать блюдо (требуется токен)
+POST {{baseUrl}}/api/dishes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Бургер тестовый",
+  "price": 35000,
+  "weightGrams": 300,
+  "calories": 400,
+  "isAvailable": true,
+  "categoryId": 1,
+  "imageFileName": null
+}
+
+### Изменить блюдо (требуется токен владельца)
+PUT {{baseUrl}}/api/dishes/{{dishId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Бургер обновлённый",
+  "price": 40000,
+  "weightGrams": 320,
+  "calories": 420,
+  "isAvailable": true,
+  "categoryId": 1,
+  "imageFileName": null
+}
+
+### Удалить блюдо (требуется токен владельца)
+DELETE {{baseUrl}}/api/dishes/{{dishId}}
+Authorization: Bearer {{token}}
+
+### Фильтр по категории
+GET {{baseUrl}}/api/dishes?categoryId=1
+
+### Фильтр по наличию
+GET {{baseUrl}}/api/dishes?isAvailable=true
+
+### Фильтр по максимальной цене
+GET {{baseUrl}}/api/dishes?maxPrice=30000
+
+### Сортировка по цене
+GET {{baseUrl}}/api/dishes?sortBy=price
+
+### Сортировка по калориям
+GET {{baseUrl}}/api/dishes?sortBy=calories
+
+### Пагинация
+GET {{baseUrl}}/api/dishes?page=1&pageSize=5
+
+### Получить список категорий
+GET {{baseUrl}}/api/categories
+
+### Получить категорию по ID
+GET {{baseUrl}}/api/categories/{{categoryId}}
+
+### Создать категорию
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Тестовая категория"
+}
+
+### Изменить категорию
+PUT {{baseUrl}}/api/categories/{{categoryId}}
+Content-Type: application/json
+
+{
+  "name": "Категория обновлённая"
+}
+
+### Удалить категорию
+DELETE {{baseUrl}}/api/categories/{{categoryId}}
+
+### Загрузить фотографию блюда (укажи путь к своему файлу)
+POST {{baseUrl}}/api/dishes/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+< ./photo.jpg
+--MyBoundary--

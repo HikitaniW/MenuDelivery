@@ -1,0 +1,26 @@
+# Node / Angular
+node_modules/
+dist/
+.angular/
+.npm/
+
+# .NET
+**/bin/
+**/obj/
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets and local configuration
+**/appsettings.Development.json
+**/appsettings.Local.json
+.env
+.env.*
+
+# System
+.DS_Store
+Thumbs.dbbackend/MenuDelivery.Api/*.db
+backend/MenuDelivery.Api/*.db-shm
+backend/MenuDelivery.Api/*.db-wal
+backend/MenuDelivery.Api/dotnet
